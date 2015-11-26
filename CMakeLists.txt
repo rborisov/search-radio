@@ -10,7 +10,7 @@ find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Sqlite3 REQUIRED)
 find_package(CURL REQUIRED)
-find_package(JSON REQUIRED)
+#find_package(JSON REQUIRED)
 
 include_directories(${PROJECT_BINARY_DIR} ${PROJECT_SOURCE_DIR}
     ${SQLITE3_INCLUDE_DIRS} ${JSON_INCLUDE_DIRS}
@@ -28,12 +28,12 @@ get_target_property(MKDATA_EXE mkdata LOCATION)
 
 set(SOURCES
     main.c
-    json_parser.c
+    json.c
 )
 
 add_executable(search ${SOURCES})
 target_link_libraries(search ${CMAKE_THREAD_LIBS_INIT}  
     ${SQLITE3_LIBRARIES} ${JSON_LIBRARIES}
-    ${CURL_LIBRARIES})
+    ${CURL_LIBRARIES} -lm)
 
 install(TARGETS search DESTINATION bin)

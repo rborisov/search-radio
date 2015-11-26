@@ -9,16 +9,16 @@ void print_json_value(json_object *jobj)
     type = json_object_get_type(jobj); /*Getting the type of the json object*/
     switch (type) {
         case json_type_boolean: printf("json_type_booleann");
-                                printf("value: %sn", json_object_get_boolean(jobj)? "true": "false");
+                                printf("value: %s\n", json_object_get_boolean(jobj)? "true": "false");
                                 break;
         case json_type_double: printf("json_type_doublen");
-                               printf("          value: %lfn", json_object_get_double(jobj));
+                               printf("          value: %lf\n", json_object_get_double(jobj));
                                break;
         case json_type_int: printf("json_type_intn");
-                            printf("          value: %dn", json_object_get_int(jobj));
+                            printf("          value: %d\n", json_object_get_int(jobj));
                             break;
         case json_type_string: printf("json_type_stringn");
-                               printf("          value: %sn", json_object_get_string(jobj));
+                               printf("          value: %s\n", json_object_get_string(jobj));
                                break;
     }
 
@@ -35,7 +35,7 @@ void json_parse_array( json_object *jobj, char *key)
     }
 
     int arraylen = json_object_array_length(jarray); /*Getting the length of the array*/
-    printf("Array Length: %dn",arraylen);
+    printf("Array Length: %d\n",arraylen);
     int i;
     json_object * jvalue;
 

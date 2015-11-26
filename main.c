@@ -76,8 +76,8 @@ char * string = "{\"sitename\" : \"joys of programming\", \"categories\" : [ \"c
 
     //printf("%s\n", chunk.memory);
     
-    json_object * jobj = json_tokener_parse(string);
-    json_parse(jobj);
+    //json_object * jobj = json_tokener_parse(chunk.memory);
+    //json_parse(jobj);
     
     free(chunk.memory);
     curl_global_cleanup();
