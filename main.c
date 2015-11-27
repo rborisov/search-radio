@@ -7,7 +7,7 @@
 #include <string.h>
 #include <curl/curl.h>
 
-#include "json_parser.h"
+#include "json.h"
 
 struct MemoryStruct {
     char *memory;
@@ -33,12 +33,85 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
     return realsize;
 }
 
+static void print_depth_shift(int depth)
+{
+    int j;
+    for (j=0; j < depth; j++) {
+        printf(" ");
+    }
+}
+
+static void process_value(json_value* value, int depth);
+
+static void process_object(json_value* value, int depth)
+{
+    int length, x;
+    if (value == NULL) {
+        return;
+    }
+    length = value->u.object.length;
+    for (x = 0; x < length; x++) {
+        print_depth_shift(depth);
+        printf("object[%d].name = %s\n", x, value->u.object.values[x].name);
+        process_value(value->u.object.values[x].value, depth+1);
+    }
+}
+
+static void process_array(json_value* value, int depth)
+{
+    int length, x;
+    if (value == NULL) {
+        return;
+    }
+    length = value->u.array.length;
+    printf("array\n");
+    for (x = 0; x < length; x++) {
+        process_value(value->u.array.values[x], depth);
+    }
+}
+
+static void process_value(json_value* value, int depth)
+{
+    int j;
+    if (value == NULL) {
+        return;
+    }
+    if (value->type != json_object) {
+        print_depth_shift(depth);
+    }
+    switch (value->type) {
+        case json_none:
+            printf("none\n");
+            break;
+        case json_object:
+            process_object(value, depth+1);
+            break;
+        case json_array:
+            process_array(value, depth+1);
+            break;
+        case json_integer:
+            printf("int: %d\n", value->u.integer);
+            break;
+        case json_double:
+            printf("double: %f\n", value->u.dbl);
+            break;
+        case json_string:
+            printf("string: %s\n", value->u.string.ptr);
+            break;
+        case json_boolean:
+            printf("bool: %d\n", value->u.boolean);
+            break;
+    }
+}
+
 int main(void)
 {
     CURL *curl;
     CURLcode res;
     char search_str[128] = "";
     struct MemoryStruct chunk;
+    json_char* json;
+    json_value* value;
 
 char * string = "{\"sitename\" : \"joys of programming\", \"categories\" : [ \"c\" , [\"c++\" , \"c\" ], \"java\", \"PHP\" ], \"author-details\": { \"admin\": false, \"name\" : \"Joys of Programming\", \"Number of Posts\" : 10 } }";
 
@@ -78,7 +151,18 @@ char * string = "{\"sitename\" : \"joys of programming\", \"categories\" : [ \"c
     
     //json_object * jobj = json_tokener_parse(chunk.memory);
     //json_parse(jobj);
-    
+   
+    json = (json_char*)chunk.memory;
+    value = json_parse(json, chunk.size);
+    if (value == NULL) {
+        fprintf(stderr, "Unable to parse data\n");
+        free(chunk.memory);
+        curl_global_cleanup();
+        return 0;
+    }
+    process_value(value, 0);
+    json_value_free(value);
+
     free(chunk.memory);
     curl_global_cleanup();
     return 0;
