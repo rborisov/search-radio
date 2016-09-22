@@ -18,7 +18,6 @@ typedef struct {
 } DIRSTREAM;
 
 typedef struct {
-    size_t size;
     int num;
     DIRSTREAM **streams;
 } DIRSTREAMS;
@@ -52,7 +51,6 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 static void print_depth_shift(int depth)
 {
     int j;
-    printf("\n%d", depth);
     for (j=0; j < depth; j++) {
         printf("-");
     }
@@ -60,6 +58,7 @@ static void print_depth_shift(int depth)
 
 static void process_value(json_value* value, int depth);
 int process_int(json_value* value, int depth);
+char *process_string(json_value* value, int depth);
 
 int append_stream()
 {
@@ -69,13 +68,17 @@ int append_stream()
     dirstreams.streams[dirstreams.num] = malloc(sizeof(DIRSTREAM));
     if (dirstreams.streams[dirstreams.num] == NULL)
         return -2;
+    memset(dirstreams.streams[dirstreams.num], 0, sizeof(DIRSTREAM));
     return dirstreams.num++;
 }
 
 void free_streams()
 {
+    printf("%s: %d\n", __func__, dirstreams.num);
     while (dirstreams.num--) {
-        printf("%d %d\n", dirstreams.num, dirstreams.streams[dirstreams.num]->id);
+        printf("%d|%d|%s|%s|%s\n", dirstreams.num, dirstreams.streams[dirstreams.num]->id,
+                dirstreams.streams[dirstreams.num]->name, dirstreams.streams[dirstreams.num]->description,
+                dirstreams.streams[dirstreams.num]->stream);
         free(dirstreams.streams[dirstreams.num]);
     }
     free(dirstreams.streams);
@@ -90,17 +93,34 @@ static void process_object(json_value* value, int depth)
     length = value->u.object.length;
     printf("{\n");
     for (x = 0; x < length; x++) {
-        print_depth_shift(depth);
+        //print_depth_shift(depth);
         printf("(%d).name = %s\n", x, value->u.object.values[x].name);
-        if (strcmp(value->u.object.values[x].name, "id") == 0 && depth == 2) {
+        if (strcmp(value->u.object.values[x].name, "id") == 0 && depth == 1) {
             //alloc new dirstr and get id
             i = append_stream();
             if (i < 0) {
                 return;
             }
-            dirstreams.streams[i]->id = process_int(value->u.object.values[x].value, depth+1);
+            dirstreams.streams[i]->id = 
+                process_int(value->u.object.values[x].value, depth);
+        } else if (strcmp(value->u.object.values[x].name, "name") == 0 
+                && depth == 1) {
+            strcpy(dirstreams.streams[i]->name, 
+                    process_string(value->u.object.values[x].value, depth));
+        } else if (strcmp(value->u.object.values[x].name, "description") == 0 
+                && depth == 1) {
+            char *ptr = process_string(value->u.object.values[x].value, depth);
+            if (ptr) {
+                strcpy(dirstreams.streams[i]->description, ptr);
+            }
+        } else if (strcmp(value->u.object.values[x].name, "stream") == 0 //DEPTH 2 ARRAY TODO
+                && depth == 1) {
+            char *ptr = process_string(value->u.object.values[x].value, depth);
+            if (ptr) {
+                strcpy(dirstreams.streams[i]->stream, ptr);
+            }
         } else {
-            process_value(value->u.object.values[x].value, depth+1);
+            process_value(value->u.object.values[x].value, depth);
         }
     }
 }
@@ -126,7 +146,7 @@ int process_int(json_value* value, int depth)
         return 0;
     }
     if (value->type == json_integer) {
-        printf("int: %d\n", value->u.integer);
+        printf("%s: int: %d\n", __func__, value->u.integer);
         return value->u.integer;
     } else {
         printf("%s: value->type != json_integer\n", __func__);
@@ -135,6 +155,21 @@ int process_int(json_value* value, int depth)
     return 0;
 }
 
+char *process_string(json_value* value, int depth)
+{
+    if (value == NULL) {
+        printf("%s: value == NULL\n", __func__);
+        return 0;
+    }
+    if (value->type == json_string) {
+        printf("%s: int: %s\n", __func__, value->u.string.ptr);
+        return value->u.string.ptr;
+    } else {
+        printf("%s: value->type != json_string\n", __func__);
+        process_value(value, depth);
+    }
+    return NULL;
+}
 
 static void process_value(json_value* value, int depth)
 {
@@ -142,14 +177,12 @@ static void process_value(json_value* value, int depth)
     if (value == NULL) {
         return;
     }
-    if (depth > 6)
-        return;
     if (value->type != json_object) {
         print_depth_shift(depth);
     }
     switch (value->type) {
         case json_none:
-            printf("none");
+            printf("none\n");
             break;
         case json_object:
             process_object(value, depth+1);
@@ -158,22 +191,22 @@ static void process_value(json_value* value, int depth)
             process_array(value, depth);
             break;
         case json_integer:
-            printf("int: %d", value->u.integer);
+            printf("int: %d\n", value->u.integer);
             break;
         case json_double:
-            printf("double: %f", value->u.dbl);
+            printf("double: %f\n", value->u.dbl);
             break;
         case json_string:
-            printf("string: %s", value->u.string.ptr);
+            printf("string: %s\n", value->u.string.ptr);
             break;
         case json_boolean:
-            printf("bool: %d", value->u.boolean);
+            printf("bool: %d\n", value->u.boolean);
             break;
         case json_null:
-            printf("null");
+            printf("null\n");
             break;
         default:
-            printf("type?: %d", value->type);
+            printf("type?: %d\n", value->type);
     }
 }
 
@@ -189,8 +222,6 @@ int main(void)
     chunk.size = 0;    /* no data at this point */
 
    dirstreams.num = 0;
-   dirstreams.size = 0;
-//   dirstreams.streams = (void*)malloc(sizeof(dirstream_ *));
   
     sprintf(search_str, "http://api.dirble.com/v2/search/%s?token=acd53b8af2e49415ce696bac4e", "Paradise");
  
