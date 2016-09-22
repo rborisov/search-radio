@@ -52,6 +52,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 static void print_depth_shift(int depth)
 {
     int j;
+    printf("\n%d", depth);
     for (j=0; j < depth; j++) {
         printf("-");
     }
@@ -148,26 +149,31 @@ static void process_value(json_value* value, int depth)
     }
     switch (value->type) {
         case json_none:
-            printf("none\n");
+            printf("none");
             break;
         case json_object:
             process_object(value, depth+1);
             break;
         case json_array:
-            process_array(value, depth+1);
+            process_array(value, depth);
             break;
         case json_integer:
-            printf("int: %d\n", value->u.integer);
+            printf("int: %d", value->u.integer);
             break;
         case json_double:
-            printf("double: %f\n", value->u.dbl);
+            printf("double: %f", value->u.dbl);
             break;
         case json_string:
-            printf("string: %s\n", value->u.string.ptr);
+            printf("string: %s", value->u.string.ptr);
             break;
         case json_boolean:
-            printf("bool: %d\n", value->u.boolean);
+            printf("bool: %d", value->u.boolean);
             break;
+        case json_null:
+            printf("null");
+            break;
+        default:
+            printf("type?: %d", value->type);
     }
 }
 
