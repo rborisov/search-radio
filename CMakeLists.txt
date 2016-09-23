@@ -27,7 +27,8 @@ set(CMAKE_C_FLAGS_DEBUG "-ggdb -pedantic")
 get_target_property(MKDATA_EXE mkdata LOCATION)
 
 set(SOURCES
-    main.c
+    #    main.c
+    lastfm.c
     json.c
 )
 

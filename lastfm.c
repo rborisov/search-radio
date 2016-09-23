@@ -221,7 +221,7 @@ int main(void)
 {
     CURL *curl;
     CURLcode res;
-    char search_str[128] = "";
+//    char search_str[128] = "";
     struct MemoryStruct chunk;
     json_char* json;
     json_value* value;
@@ -230,7 +230,7 @@ int main(void)
 
    dirstreams.num = 0;
   
-    sprintf(search_str, "http://api.dirble.com/v2/search/%s?token=acd53b8af2e49415ce696bac4e", "Paradise");
+//    sprintf(search_str, "http://api.dirble.com/v2/search/%s?token=acd53b8af2e49415ce696bac4e", "Paradise");
  
     curl_global_init(CURL_GLOBAL_ALL);
  
@@ -240,7 +240,14 @@ int main(void)
         /* First set the URL that is about to receive our POST. This URL can
            just as well be a https:// URL if that is what should receive the
            data. */ 
-        curl_easy_setopt(curl, CURLOPT_URL, search_str);
+        curl_easy_setopt(curl, CURLOPT_URL, "http://ws.audioscrobbler.com/2.0");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS,
+                "method=artist.getinfo\
+                &artist=radiohead\
+                &autocorrect=1\
+                &api_key=ecb4076a85c81aae38a7e8f11e42a0b1\
+                &format=json\
+                &callback=");
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
         /* we pass our 'chunk' struct to the callback function */ 
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
